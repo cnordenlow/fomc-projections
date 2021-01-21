@@ -1,0 +1,130 @@
+---
+title: "FOMC Projections"
+author: "christoffer.nordenlow@outlook.com"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+
+
+library(rvest)
+library(tidyverse)
+library(stringr)
+library(gganimate)
+library(gifski)
+
+###source scraping
+#source('parseProjections.R')
+#source('parseSpecialProjections.R')
+
+##Get fed funds
+
+fedFunds <- read.table(
+  "https://raw.githubusercontent.com/cnordenlow/text-mining-fomc/main/Data/fedFundsRate.csv", 
+  sep=",", header=TRUE)
+
+
+#Change dates
+fedFunds <- fedFunds %>%
+  mutate(date = as.Date(gsub("\\D", "", date), format = "%Y%m%d"))
+
+
+#arrange
+fedFunds <- arrange(fedFunds, date)
+
+fedFunds <- fedFunds%>%
+  filter(bound == "lower_bound")%>%
+  select(-bound)
+
+
+
+###Create dataframe  with dates
+dates <- data.frame(
+date = seq(as.Date('2011-12-01'), Sys.Date(), by = 'days')
+)
+  
+### Adjust Fed funds to day to day rate
+fedFunds <- merge(dates, fedFunds, by = "date", all.x = TRUE)
+
+fedFunds <- fedFunds %>%
+  fill(rate, .direction = "down")
+
+
+
+
+
+
+##
+####Test
+proj_table <- read.table(
+  "projections_table.csv",  ##på detta sätt läser den ur aktuell mapp
+  sep=",", header=TRUE)
+
+proj_table_specials <- read.table(
+  "projections_table_specials.csv",  ##på detta sätt läser den ur aktuell mapp
+  sep=",", header=TRUE)
+
+
+proj_table <- rbind(proj_table, proj_table_specials) 
+
+#fix dates
+
+proj_table$forecast_period <- as.Date(proj_table$forecast_period, format = "%Y-%m-%d")
+proj_table$date <- as.Date(proj_table$date, format = "%Y-%m-%d")
+
+
+
+
+
+proj_table <- proj_table %>%
+ # filter(variable %in% c("Federal funds rate"))%>%
+ # filter(variable %in% c("Change in real GDP"))%>%
+  #  filter(variable %in% c("Change in real GDP"))%>%
+  #  filter(variable %in% c("Unemployment", "PCE inflation", "Change in real GDP","Federal funds rate"))%>%
+  filter(des %in% c("Median 1", "Median1"))%>%
+  na.omit()%>%
+  mutate(values = as.numeric(values))%>%
+  mutate(projection_year = substr(projection, 1, 4))
+
+
+
+
+
+
+
+
+
+```
+
+
+
+---
+
+Economic projections are collected from each member of the Board of Governors and each Federal Reserve Bank president four times a year. This report extracts and plots the projections. Please see *[github](https://github.com/cnordenlow/fomc-projections)* for methodology.
+
+
+**Table of Contents**
+
+* [Fed Funds rate projections](#Fed-funds-rate-projections) 
+
+
+
+
+
+
+#### Fed Funds rate projections
+```{r, echo=FALSE, messages=FALSE, warning =FALSE, results=FALSE}
+
+source('animationPlot.r')
+
+```
+
+![](animatedProjections.gif)
+
+
