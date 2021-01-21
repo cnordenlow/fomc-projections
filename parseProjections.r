@@ -1,11 +1,17 @@
 
+#####################################################################################################
+### Libraries                                                                                     ###
+#####################################################################################################
 
 
 library(rvest)
 library(tidyverse)
 library(stringr)
 
-########Function for parsing
+#####################################################################################################
+### Function for parsing                                                                          ###
+#####################################################################################################
+
 
 parse_tables <- function(projections) {
   ### fomcprojections
@@ -50,9 +56,9 @@ parse_tables <- function(projections) {
 
 
 
-#############Prepared for additional subpages
-
-###Parse all links
+#####################################################################################################
+### Parse all projection links                                                                    ###
+#####################################################################################################
 
 url_links = list(
    "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
@@ -80,8 +86,10 @@ projection_links <- c(projection_links, "/monetarypolicy/fomcminutes20151216ep.h
 projection_links <- c(projection_links, "/monetarypolicy/fomcminutes20150917ep.htm")
 
 
+#####################################################################################################
+### Create an empty data frame                                                                    ###
+#####################################################################################################
 
-#create data frame with 0 rows and 5 columns
 proj_table <- data.frame(matrix(ncol = 5, nrow = 0))
 
 #provide column names
@@ -89,13 +97,14 @@ colnames(proj_table) <- c('variable', 'des', 'forecast_period', 'values', 'date'
 
 
 
-#primes_list <- list("/monetarypolicy/fomcprojtabl20191211.htm")
+#####################################################################################################
+### Iterates all projection links and parse the tables                                            ###
+#####################################################################################################
 
-# loop all projection links
+
 for (projections in projection_links) {
   Sys.sleep(sample(3:9, 1, replace=T))
   df <- parse_tables(projections)
-  #merge
 
   df <- df %>%
     mutate(date = as.numeric(gsub("\\D", "", projections)))
@@ -107,19 +116,26 @@ for (projections in projection_links) {
   }
 
 
-#Some cleaning and wrangling
+#####################################################################################################
+### Some additional cleaning and wrangling                                                        ###
+#####################################################################################################
+
 proj_table <- proj_table %>%
   select(-.copy)%>%
   mutate(projection = date)%>%
     mutate(date = as.Date(gsub("\\D", "", date), format = "%Y%m%d"))%>%
   mutate(forecast_period = as.Date(paste(forecast_period, 12, 31, sep = "-")))%>%
  mutate(values = as.numeric(values))%>%
-  mutate(meeting_month = months(date))
+  mutate(meeting_month = months(date))%>%
+  mutate(projection_year = substr(projection, 1, 4))
 
 
+#####################################################################################################
+### Save as csv                                                                                   ###
+#####################################################################################################
 
 
-write.table(proj_table, "projections_table.csv", sep=",")
+write.table(proj_table, "data//projections_table.csv", sep=",")
 
 
 

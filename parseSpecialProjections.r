@@ -1,4 +1,9 @@
 
+#####################################################################################################
+### Libraries                                                                                     ###
+#####################################################################################################
+
+
 library(rvest)
 library(tidyverse)
 library(stringr)
@@ -6,6 +11,11 @@ library(stringr)
 
 
 ### special fomcprojections. need to calculate it yourself from 2014 and backwards
+
+#####################################################################################################
+### Function for parsing and calculating median                                                   ###
+#####################################################################################################
+
 parse_tables_specials <- function(projections) {
   
   base_url = "https://www.federalreserve.gov"
@@ -47,7 +57,20 @@ parse_tables_specials <- function(projections) {
   return(df)
 }
 
+#####################################################################################################
+### Links to parse                                                                                ###
+#####################################################################################################
 
+
+projection_links_specials = list(
+  "/monetarypolicy/fomcprojtabl20131218.htm",
+  "/monetarypolicy/fomcminutes20141217epa.htm#figure2", ###special
+  "/monetarypolicy/files/FOMC20111213material.htm") ###even more special
+
+
+#####################################################################################################
+### Create an empty data frame                                                                    ###
+#####################################################################################################
 
 #create data frame with 0 rows and 5 columns
 proj_table_specials <- data.frame(matrix(ncol = 5, nrow = 0))
@@ -57,11 +80,9 @@ colnames(proj_table_specials) <- c('variable', 'des', 'forecast_period', 'values
 
 
 
-projection_links_specials = list(
-  "/monetarypolicy/fomcprojtabl20131218.htm",
-  "/monetarypolicy/fomcminutes20141217epa.htm#figure2", ###ännu mer speciell
-  "/monetarypolicy/files/FOMC20111213material.htm") ###ännu mer speciell
-
+#####################################################################################################
+### Iterates all projection links and parse the tables                                            ###
+#####################################################################################################
 
 
 for (projections in projection_links_specials) {
@@ -79,6 +100,9 @@ for (projections in projection_links_specials) {
   }
   
 
+#####################################################################################################
+### Some additional cleaning and wrangling                                                        ###
+#####################################################################################################
 
 
 proj_table_specials <- proj_table_specials %>%
@@ -87,8 +111,12 @@ proj_table_specials <- proj_table_specials %>%
   mutate(date = as.Date(gsub("\\D", "", date), format = "%Y%m%d"))%>%
   mutate(forecast_period = as.Date(paste(forecast_period, 12, 31, sep = "-")))%>%
   mutate(values = as.numeric(values))%>%
-  mutate(meeting_month = months(date))
+  mutate(meeting_month = months(date))%>%
+  mutate(projection_year = substr(projection, 1, 4))
+
+#####################################################################################################
+### Save as csv                                                                                   ###
+#####################################################################################################
 
 
-
-write.table(proj_table_specials, "projections_table_specials.csv", sep=",")
+write.table(proj_table_specials, "data//projections_table_specials.csv", sep=",")

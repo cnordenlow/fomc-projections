@@ -1,11 +1,25 @@
 
 
 
+#####################################################################################################
+### Get Fed Funds projections, merge with fedfunds                                                ###
+#####################################################################################################
+
+
+temp <- proj_table %>%
+  filter(variable %in% c("Federal funds rate"))%>%
+  filter(meeting_month %in% c("december"))
+
+#Max y
+max_y = round(max(temp$values) +0.5,1)
+
+temp <- merge(fedFunds, temp, by.x = "date", by.y ="forecast_period", all = TRUE)
+
+#change na projections to ""
+temp$projection_year[is.na(temp$projection_year)] <- ""
 
 
 
-
-animated_plot_fed_funds <- function(temp) {
 
 p <- ggplot(temp, aes(x = date, y = rate)) + 
   geom_line(size = 1)+
@@ -34,6 +48,5 @@ p <- ggplot(temp, aes(x = date, y = rate)) +
   ylim(0, max_y)+
   transition_reveal(date)
 
-anim_save("animatedProjections.gif",animate(p, duration = 15, renderer=gifski_renderer(loop = FALSE)))
+anim_save("animatedFedFundsProjections.gif",animate(p, duration = 15, renderer=gifski_renderer(loop = FALSE)))
 
-}
