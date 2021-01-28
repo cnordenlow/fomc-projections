@@ -56,7 +56,7 @@ fedFunds <- fedFunds%>%
 #####################################################################################################
 
 #Individual code
-beaKey <- '0F414F31-6CEA-43E7-96C5-289028F3C061'
+beaKey <- 'Register at BEA'
 beaSearch('Personal consumption expenditures (PCE)', beaKey)
 
 
