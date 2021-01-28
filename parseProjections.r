@@ -23,6 +23,13 @@ parse_tables <- function(projections) {
     html_nodes("table") %>%
     html_table(fill = TRUE)
 
+  
+  
+  #########Normal tables: After sep 2015
+  
+  if (special_tables == 0) {
+  
+  
   ##Get table one
   df <- df[[1]]
   
@@ -48,6 +55,40 @@ parse_tables <- function(projections) {
   
   #rename first column  
   df <- rename(df, variable = 1)
+  }
+  
+  #########Special tables: 2011-2014
+  
+  if (special_tables == 1) {
+  ####This depends on which minutes, year
+  date = as.numeric(gsub("\\D", "", substr(projections, 1, 40))) ##hummz
+  
+  if (date == 20131218) {
+    df <- df[[6]]
+  }
+  
+  if (date == 20141217) {
+    df <- df[[6]]
+  }
+  
+  if (date == 20111213) {
+    df <- df[[9]]
+  }
+  
+  #calculate median, needs to ungroup it
+  df <- df %>%
+    pivot_longer(!1, names_to = "forecast_period", values_to = "values")%>%
+    rename(rate = 1)%>%
+    #filter(!forecast_period %in% c("Longer run", "Longer Run"))%>%
+    na.omit(values)%>%
+    uncount(values)%>%
+    group_by(forecast_period)%>%
+    summarize(values = median(rate))
+  
+  df$values <- as.character(df$values)
+  
+  }
+  
   
   return(df)
 }
@@ -57,7 +98,7 @@ parse_tables <- function(projections) {
 
 
 #####################################################################################################
-### Parse all projection links                                                                    ###
+### Parse all projection links efter 2015                                                         ###
 #####################################################################################################
 
 url_links = list(
@@ -86,6 +127,16 @@ projection_links <- c(projection_links, "/monetarypolicy/fomcminutes20151216ep.h
 projection_links <- c(projection_links, "/monetarypolicy/fomcminutes20150917ep.htm")
 
 
+#projection_links <- c("/monetarypolicy/fomcprojtabl20131218.htm")
+
+##Special links
+projection_links_specials = list(
+  "/monetarypolicy/fomcprojtabl20131218.htm",
+  "/monetarypolicy/fomcminutes20141217epa.htm#figure2", ###special
+  "/monetarypolicy/files/FOMC20111213material.htm") ###even more special
+
+
+
 #####################################################################################################
 ### Create an empty data frame                                                                    ###
 #####################################################################################################
@@ -102,7 +153,10 @@ colnames(proj_table) <- c('variable', 'des', 'forecast_period', 'values', 'date'
 #####################################################################################################
 
 
+
+#non specials (after 2015)
 for (projections in projection_links) {
+  special_tables = 0
   Sys.sleep(sample(3:9, 1, replace=T))
   df <- parse_tables(projections)
 
@@ -116,26 +170,38 @@ for (projections in projection_links) {
   }
 
 
+#specials (before 2015)
+for (projections in projection_links_specials) {
+  special_tables = 1
+  
+  Sys.sleep(sample(3:9, 1, replace=T))
+  df <- parse_tables(projections)
+  
+  df <- df %>%
+    mutate(date = as.numeric(gsub("\\D", "", substr(projections, 1, 40))),
+           variable = "Federal funds rate",
+           des = "Median1"
+    )
+  
+  proj_table <- bind_rows(proj_table, df)
+  
+}
+
+
 #####################################################################################################
-### Some additional cleaning and wrangling                                                        ###
+### Some additional cleaning and wrangling, write table                                           ###
 #####################################################################################################
 
+
+if (".copy" %in% names(proj_table)){
 proj_table <- proj_table %>%
-  select(-.copy)%>%
-  mutate(projection = date)%>%
-    mutate(date = as.Date(gsub("\\D", "", date), format = "%Y%m%d"))%>%
-  mutate(forecast_period = as.Date(paste(forecast_period, 12, 31, sep = "-")))%>%
- mutate(values = as.numeric(values))%>%
-  mutate(meeting_month = months(date))%>%
-  mutate(projection_year = substr(projection, 1, 4))
+  select(-.copy)
+}
 
-
-#####################################################################################################
-### Save as csv                                                                                   ###
-#####################################################################################################
 
 
 write.table(proj_table, "data//projections_table.csv", sep=",")
+
 
 
 
