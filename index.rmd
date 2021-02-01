@@ -255,7 +255,7 @@ p <- p +
   transition_reveal(date)
 
 
-anim_save("animatedFedFundsProjections.gif",animate(p, duration = 12, renderer=gifski_renderer(loop = FALSE)))
+anim_save("animatedFedFundsProjections.gif",animate(p, duration = 10, renderer=gifski_renderer(loop = FALSE)))
 
 
 
@@ -289,7 +289,7 @@ p <- p +
   transition_reveal(date)
 
 
-anim_save("animatedPCE.gif",animate(p, duration = 12, renderer=gifski_renderer(loop = FALSE)))
+anim_save("animatedPCE.gif",animate(p, duration = 10, renderer=gifski_renderer(loop = FALSE)))
 
 
 
@@ -324,7 +324,7 @@ p <- p +
   transition_reveal(date)
 
 
-anim_save("animatedUnemployment.gif",animate(p, duration = 12, renderer=gifski_renderer(loop = FALSE)))
+anim_save("animatedUnemployment.gif",animate(p, duration = 10, renderer=gifski_renderer(loop = FALSE)))
 
 
 
@@ -361,7 +361,7 @@ p <- p +
   transition_reveal(date)
 
 
-anim_save("animatedGDP.gif",animate(p, duration = 12, renderer=gifski_renderer(loop = FALSE)))
+anim_save("animatedGDP.gif",animate(p, duration = 10, renderer=gifski_renderer(loop = FALSE)))
 
 
 
